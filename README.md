@@ -15,6 +15,7 @@ Features
  SQL Data Persistance (at least 3 tables; all 3NF)
  Logging (extra)
  Authentication/Authorization (extra)
+
 Tech Stack
  TypeScript
  PostGreSQL
@@ -22,10 +23,12 @@ Tech Stack
  Express
  Jest
  Git SCM (on GitHub)
+
 Init Instructions
 Select a project idea and submit it to trainer for approval. Be sure to include:
 The 3 data entities that you will be persisting
 Any external APIs that you will be using (not required if none are used)
 Once approved, create a new repository within this organization (naming convention: firstname_lastname_p0)
+
 Presentation
  5 minute live demonstration of endpoint consumption using Postman
