@@ -1,0 +1,35 @@
+{
+  "name": "drew_peters_p0",
+  "version": "1.0.0",
+  "description": "Project 0 banking api",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.13.2",
+    "@typescript-eslint/eslint-plugin": "^2.29.0",
+    "@typescript-eslint/parser": "^2.29.0",
+    "eslint": "^6.8.0",
+    "jest": "^25.4.0",
+    "ts-jest": "^25.4.0",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "start": "tsc && node index.js",
+    "test": "jest --watch",
+    "coverage": "jest --coverage"
+  },
+  "author": "Drew Peters",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/200406-java-react-usf/drew_peters_p0.git"
+  },
+  "bugs": {
+    "url": "https://github.com/200406-java-react-usf/drew_peters_p0/issues"
+  },
+  "homepage": "https://github.com/200406-java-react-usf/drew_peters_p0#readme"
+}
