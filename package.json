@@ -2,7 +2,7 @@
   "name": "drew_peters_p0",
   "version": "1.0.0",
   "description": "Project 0 banking api",
-  "main": "index.js",
+  "main": "./build/index.js",
   "directories": {
     "doc": "docs"
   },
@@ -18,7 +18,7 @@
     "typescript": "^3.8.3"
   },
   "scripts": {
-    "start": "tsc && node index.js",
+    "start": "tsc && node ./build/index.js",
     "test": "jest --watch",
     "coverage": "jest --coverage"
   },
