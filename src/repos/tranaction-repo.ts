@@ -1,43 +1,42 @@
-import data from '../data/user-db';
-import { User } from '../models/account';
+import data from '../data/transaction-db';
+import { Transaction } from '../models/transaction';
 import { CrudRepository } from './crud-repo';
 import Validator from '../util/validator';
-import {  
-    AuthenticationError, 
+import {   
     BadRequestError, 
     NotImplementedError, 
     ResourceNotFoundError, 
     ResourcePersistenceError
 } from '../errors/errors';
 
-export class UserRepository implements CrudRepository<User> {
+export class TransactionRepository implements CrudRepository<Transaction> {
 
-    private static instance: UserRepository;
+    private static instance: TransactionRepository;
 
     private constructor() {}
 
     static getInstance() {
-        return !UserRepository.instance ? UserRepository.instance = new UserRepository() : UserRepository.instance;
+        return !TransactionRepository.instance ? TransactionRepository.instance = new TransactionRepository() : TransactionRepository.instance;
     }
 
-    getAll(): Promise<User[]> {
+    getAll(): Promise<Transaction[]> {
 
-        return new Promise<User[]>((resolve, reject) => {
+        return new Promise<Transaction[]>((resolve, reject) => {
 
             setTimeout(() => {
             
-                let users = [];
+                let transactions = [];
     
-                for (let user of data) {
-                    users.push({...user});
+                for (let transaction of data) {
+                    transactions.push({...transaction});
                 }
         
-                if (users.length == 0) {
+                if (transactions.length == 0) {
                     reject(new ResourceNotFoundError());
                     return;
                 }
         
-                resolve(users.map(this.removePassword));
+                resolve;
         
             }, 250);
 
@@ -45,8 +44,8 @@ export class UserRepository implements CrudRepository<User> {
     
     }
 
-    getById(id: number): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
+    getById(id: number): Promise<Transaction> {
+        return new Promise<Transaction>((resolve, reject) => {
             
             if (!Validator.isValidId(id)) {
                 reject(new BadRequestError());
@@ -54,96 +53,96 @@ export class UserRepository implements CrudRepository<User> {
 
             setTimeout(() => {
                 
-                const user = {...data.find(user => user.id === id)};
+                const transaction = {...data.find(transaction => transaction.id === id)};
 
-                if(Object.keys(user).length === 0) {
+                if(Object.keys(transaction).length === 0) {
                     reject(new ResourceNotFoundError());
                     return;
                 }
 
-                resolve(this.removePassword(user));
+                resolve;
 
             }, 250);
 
         });
     }
 
-    getUserByUsername(un: string): Promise<User> {
+    // getUserByUsername(un: string): Promise<Transaction> {
 
-        return new Promise<User>((resolve, reject) => {
+    //     return new Promise<User>((resolve, reject) => {
 
-            if (!Validator.isValidStrings(un)) {
-                reject(new BadRequestError());
-                return;
-            }
+    //         if (!Validator.isValidStrings(un)) {
+    //             reject(new BadRequestError());
+    //             return;
+    //         }
            
-            setTimeout(() => {
+    //         setTimeout(() => {
         
-                const user = {...data.filter(user => user.username === un)[0]};
+    //             const user = {...data.filter(user => user.username === un)[0]};
                 
-                if (Object.keys(user).length == 0) {
-                    reject(new ResourceNotFoundError());
-                    return;
-                }
+    //             if (Object.keys(user).length == 0) {
+    //                 reject(new ResourceNotFoundError());
+    //                 return;
+    //             }
         
-                resolve(this.removePassword(user));
+    //             resolve(this.removePassword(user));
         
-            }, 250);
+    //         }, 250);
 
-        });
+    //     });
         
     
-    }
+    // }
 
-    getUserByCredentials(un: string, pw: string) {
+    // getUserByCredentials(un: string, pw: string) {
         
-        return new Promise<User>((resolve, reject) => {
+    //     return new Promise<User>((resolve, reject) => {
 
-            if (!Validator.isValidStrings(un, pw)) {
-                reject(new BadRequestError());
-                return;
-            }
+    //         if (!Validator.isValidStrings(un, pw)) {
+    //             reject(new BadRequestError());
+    //             return;
+    //         }
         
-            setTimeout(() => {
+    //         setTimeout(() => {
         
-                const user = {...data.filter(user => user.username === un && user.password === pw).pop()!};
+    //             const user = {...data.filter(user => user.username === un && user.password === pw).pop()!};
                 
-                if (Object.keys(user).length === 0) {
-                    reject(new AuthenticationError('Bad credentials provided.'));
-                    return;
-                }
+    //             if (Object.keys(user).length === 0) {
+    //                 reject(new AuthenticationError('Bad credentials provided.'));
+    //                 return;
+    //             }
                 
-                resolve(this.removePassword(user));
+    //             resolve(this.removePassword(user));
         
-            }, 250);
+    //         }, 250);
 
-        });
+    //     });
     
-    }
+    // }
 
-    save(newUser: User): Promise<User> {
+    save(newTransaction: Transaction): Promise<Transaction> {
             
-        return new Promise<User>((resolve, reject) => {
+        return new Promise<Transaction>((resolve, reject) => {
         
-            if (!Validator.isValidObject(newUser, 'id')) {
-                reject(new BadRequestError('Invalid property values found in provided user.'));
+            if (!Validator.isValidObject(newTransaction, 'id')) {
+                reject(new BadRequestError('Invalid property values found in provided transaction.'));
                 return;
             }
         
             setTimeout(() => {
         
-                let conflict = data.filter(user => user.username == newUser.username).pop();
+                let conflict = data.filter(transaction => transaction.id == newTransaction.id).pop();
         
                 if (conflict) {
-                    reject(new ResourcePersistenceError('The provided username is already taken.'));
+                    reject(new ResourcePersistenceError('The provided transaction id is already taken.'));
                     return;
                 }
         
         
-                newUser.id = (data.length) + 1;
-                data.push(newUser);
+                newTransaction.id = (data.length) + 1;
+                data.push(newTransaction);
         
-                resolve(this.removePassword(newUser));
+                resolve;
         
             });
 
@@ -151,32 +150,32 @@ export class UserRepository implements CrudRepository<User> {
     
     }
 
-    update(updatedUser: User): Promise<boolean> {
+    update(updatedTransaction: Transaction): Promise<boolean> {
         
         return new Promise<boolean>((resolve, reject) => {
 
-            let validObj = Validator.isValidObject(updatedUser);
-            let validId = Validator.isValidId(updatedUser.id);
+            let validObj = Validator.isValidObject(updatedTransaction);
+            let validId = Validator.isValidId(updatedTransaction.id);
             if (!validObj || !validId) {
-                reject(new BadRequestError('Invalid user provided (invalid values found).'));
+                reject(new BadRequestError('Invalid transaction provided (invalid values found).'));
                 return;
             }
         
             setTimeout(() => {
         
-                let persistedUser = data.find(user => user.id === updatedUser.id);
+                let persistedTransaction = data.find(transaction => transaction.id === updatedTransaction.id);
         
-                if (!persistedUser) {
-                    reject(new ResourceNotFoundError('No user found with provided id.'));
+                if (!persistedTransaction) {
+                    reject(new ResourceNotFoundError('No transaction found with provided id.'));
                     return;
                 }
                 
-                if (persistedUser.username != updatedUser.username) {
-                    reject(new ResourcePersistenceError('Usernames cannot be updated.'));
+                if (persistedTransaction.id != updatedTransaction.id) {
+                    reject(new ResourcePersistenceError('Transactions cannot be updated.'));
                     return;
                 }
     
-                persistedUser = updatedUser;
+                persistedTransaction = updatedTransaction;
     
                 resolve(true);
         
@@ -195,13 +194,8 @@ export class UserRepository implements CrudRepository<User> {
             }
 
             reject(new NotImplementedError());
+
+            resolve;
         });
     }
-
-    private removePassword(user: User): User {
-        let usr = {...user};
-        delete usr.password;
-        return usr;   
-    }
-
 }

@@ -1,5 +1,5 @@
 import data from '../data/user-db';
-import { User } from '../models/account';
+import { User } from '../models/user';
 import { CrudRepository } from './crud-repo';
 import Validator from '../util/validator';
 import {  

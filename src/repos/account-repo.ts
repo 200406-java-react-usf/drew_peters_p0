@@ -24,13 +24,13 @@ export class AccountRepository implements CrudRepository<Account> {
 
             setTimeout(() => {
             
-                let users = [];
+                let accounts = [];
     
-                for (let user of data) {
-                    users.push({...user});
+                for (let account of data) {
+                    accounts.push({...account});
                 }
         
-                if (users.length == 0) {
+                if (accounts.length == 0) {
                     reject(new ResourceNotFoundError());
                     return;
                 }
