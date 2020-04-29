@@ -1,26 +1,55 @@
+import url from 'url';
 import express from 'express';
-// import { Account } from '../models/account';
-import { AccountRepository } from '../repos/account-repo';
+import AppConfig from '../config/app';
+import { isEmptyObject } from '../util/validator';
+import { ParsedUrlQuery } from 'querystring';
+import { adminGuard } from '../middleware/auth-middleware';
 
 export const AccountRouter = express.Router();
 
-const accountRepo = AccountRepository.getInstance();
+const accountService = AppConfig.accountService;
 
-AccountRouter.get('/', async (req, resp) => {
+AccountRouter.get('', adminGuard, async (req, resp) => {
+
     try {
-        let payload = await accountRepo.getAll();
-        resp.status(200).json(payload).send();
+
+        let reqURL = url.parse(req.url, true);
+
+        if(!isEmptyObject<ParsedUrlQuery>(reqURL.query)) {
+            let payload = await accountService.getAccountByUniqueKey({...reqURL.query});
+            resp.status(200).json(payload);
+        } else {
+            let payload = await accountService.getAllAccounts();
+            resp.status(200).json(payload);
+        }
+
     } catch (e) {
-        resp.status(404).json(e).send();
+        resp.status(e.statusCode).json(e);
     }
+
+    resp.send();
+
 });
 
 AccountRouter.get('/:id', async (req, resp) => {
-    const id = +req.params.id; // the plus sign is to type coerce id into a number
+    const id = +req.params.id;
     try {
-        let payload = await accountRepo.getById(id);
-        resp.status(200).json(payload).send();
+        let payload = await accountService.getAccountById(id);
+        return resp.status(200).json(payload);
     } catch (e) {
-        resp.status(404).json(e).send();
+        return resp.status(e.statusCode).json(e).send();
     }
+});
+
+AccountRouter.post('', async (req, resp) => {
+
+    console.log('POST REQUEST RECEIVED AT /users');
+    console.log(req.body);
+    try {
+        let newUser = await accountService.addNewAccount(req.body);
+        return resp.status(201).json(newUser).send();
+    } catch (e) {
+        return resp.status(e.statusCode).json(e).send();
+    }
+
 });
