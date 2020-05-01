@@ -1,6 +1,6 @@
 # Project 0
 
-For Project 0, I will be building a RESTful API using TypeScript and Express. Associates are allowed to come up with their own API idea, but it must be approved by the trainer.
+WIP:"For Project 0, I will be building a RESTful API using TypeScript and Express. Associates are allowed to come up with their own API idea, but it must be approved by the trainer." -Need to add more description for my project. Roughly a paragraph explaining high level overview.
 
 
 ## My idea: Banking API that persists 3 data sets.
