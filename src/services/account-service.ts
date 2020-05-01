@@ -21,139 +21,128 @@ export class AccountService {
         this.accountRepo = accountRepo;
     }
 
-    getAllAccounts(): Promise<Account[]> {
+    async getAllAccounts(): Promise<Account[]> {
 
-        return new Promise<Account[]>(async (resolve, reject) => {
+        try {
 
-            let accounts: Account[] = [];
-            let result = await this.accountRepo.getAll();
-
-            for (let account of result) {
-                accounts.push({...account});
-            }
+            let accounts = await this.accountRepo.getAll();
 
             if (accounts.length == 0) {
-                reject(new ResourceNotFoundError());
-                return;
+                throw new ResourceNotFoundError();
             }
-            resolve(accounts);
 
-        });
+            return accounts;
+
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    getAccountById(id: number): Promise<Account> {
+    async getAccountById(id: number): Promise<Account> {
 
-        return new Promise<Account>(async (resolve, reject) => {
+        try {
 
             if (!isValidId(id)) {
-                return reject(new BadRequestError());
+                throw new BadRequestError();
             }
 
-            let account = {...await this.accountRepo.getById(id)};
+            let account = await this.accountRepo.getById(id);
 
             if (isEmptyObject(account)) {
-                return reject(new ResourceNotFoundError());
+                throw new ResourceNotFoundError();
             }
-            resolve(account);
 
-        });
+            return account;
+
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    getAccountByUniqueKey(queryObj: any): Promise<Account> {
+    async getAccountByUniqueKey(queryObj: any): Promise<Account> {
 
-        return new Promise<Account>(async (resolve, reject) => {
+        try {
 
-            // we need to wrap this up in a try/catch in case errors are thrown for our awaits
-            try {
+            let queryKeys = Object.keys(queryObj);
 
-                let queryKeys = Object.keys(queryObj);
-
-                if(!queryKeys.every(key => isPropertyOf(key, Account))) {
-                    return reject(new BadRequestError());
-                }
-
-                // we will only support single param searches (for now)
-                let key = queryKeys[0];
-                let val = queryObj[key];
-
-                // if they are searching for a user by id, reuse the logic we already have
-                if (key === 'id') {
-                    return resolve(await this.getAccountById(+val));
-                }
-
-                // ensure that the provided key value is valid
-                if(!isValidStrings(val)) {
-                    return reject(new BadRequestError());
-                }
-
-                let account = {...await this.accountRepo.getAccountByUniqueKey(key, val)};
-
-                if (isEmptyObject(account)) {
-                    return reject(new ResourceNotFoundError());
-                }
-                resolve(account);
-
-            } catch (e) {
-                reject(e);
+            if(!queryKeys.every(key => isPropertyOf(key, Account))) {
+                throw new BadRequestError();
             }
 
-        });
+            let key = queryKeys[0];
+            let val = queryObj[key];
+
+            if (key === 'id') {
+                return await this.getAccountById(+val);
+            }
+
+            // ensure that the provided key value is valid
+            if(!isValidStrings(val)) {
+                throw new BadRequestError();
+            }
+
+            let account = await this.accountRepo.getAccountByUniqueKey(key, val);
+
+            if (isEmptyObject(account)) {
+                throw new ResourceNotFoundError();
+            }
+
+            return account;
+
+        } catch (e) {
+            throw e;
+        }
     }
 
-    addNewAccount(newAccount: Account): Promise<Account> {
+    async addNewAccount(newAccount: Account): Promise<Account> {
         
-        return new Promise<Account>(async (resolve, reject) => {
+        try {
 
             if (!isValidObject(newAccount, 'id')) {
-                reject(new BadRequestError('Invalid property values found in provided account.'));
-                return;
+                throw new BadRequestError('Invalid property values found in provided account.');
             }
 
             let conflict = this.getAccountByUniqueKey({id: newAccount.id});
         
             if (conflict) {
-                reject(new ResourcePersistenceError('The provided account id is already taken.'));
-                return;
+                throw new ResourcePersistenceError('The provided account id is already taken.');
             }
 
-            try {
-                const persistedAccount = await this.accountRepo.save(newAccount);
-                resolve (persistedAccount);
-            } catch (e) {
-                reject(e);
-            }
-
-        });
+            const persistedAccount = await this.accountRepo.save(newAccount);
+                
+            return persistedAccount;
+            
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    updateAccount(updatedAccount: Account): Promise<boolean> {
+    async updateAccount(updatedAccount: Account): Promise<boolean> {
         
-        return new Promise<boolean>(async (resolve, reject) => {
+        try {
 
             if (!isValidObject(updatedAccount)) {
-                reject(new BadRequestError('Invalid account provided (invalid values found).'));
-                return;
+                throw new BadRequestError('Invalid account provided (invalid values found).');
             }
 
-            try {
                 // let repo handle some of the other checking since we are still mocking db
-                resolve(await this.accountRepo.update(updatedAccount));
-            } catch (e) {
-                reject(e);
-            }
-
-        });
+            return await this.accountRepo.update(updatedAccount);
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    deleteById(id: number): Promise<boolean> {
+    async deleteById(id: number): Promise<boolean> {
         
-        return new Promise<boolean>(async (resolve, reject) => {
-            reject(new NotImplementedError());
-        });
+        try {
+            throw new NotImplementedError();
+        } catch (e) {
+            throw e;
+        }
 
     }
 

@@ -21,142 +21,132 @@ export class TransactionService {
         this.transactionRepo = transactionRepo;
     }
 
-    getAllTransactions(): Promise<Transaction[]> {
+    async getAllTransactions(): Promise<Transaction[]> {
 
-        return new Promise<Transaction[]>(async (resolve, reject) => {
+        try {
 
-            let transactions: Transaction[] = [];
-            let result = await this.transactionRepo.getAll();
+            let transactions = await this.transactionRepo.getAll();
 
-            for (let transaction of result) {
-                transactions.push({...transaction});
-            }
 
             if (transactions.length == 0) {
-                reject(new ResourceNotFoundError());
-                return;
+                throw new ResourceNotFoundError();
             }
 
-            resolve(transactions);
+            return transactions;
 
-        });
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    getTransactionById(id: number): Promise<Transaction> {
+    async getTransactionById(id: number): Promise<Transaction> {
 
-        return new Promise<Transaction>(async (resolve, reject) => {
+        try {
 
             if (!isValidId(id)) {
-                return reject(new BadRequestError());
+                throw new BadRequestError();
             }
 
             let transaction = {...await this.transactionRepo.getById(id)};
 
             if (isEmptyObject(transaction)) {
-                return reject(new ResourceNotFoundError());
+                throw new ResourceNotFoundError();
             }
 
-            resolve(transaction);
+            return transaction;
 
-        });
+        } catch (e) {
+            throw e;
+        }
 
     }
 
-    getTransactionByUniqueKey(queryObj: any): Promise<Transaction> {
+    async getTransactionByUniqueKey(queryObj: any): Promise<Transaction> {
 
-        return new Promise<Transaction>(async (resolve, reject) => {
+        // we need to wrap this up in a try/catch in case errors are thrown for our awaits
+        try {
 
-            // we need to wrap this up in a try/catch in case errors are thrown for our awaits
-            try {
+            let queryKeys = Object.keys(queryObj);
 
-                let queryKeys = Object.keys(queryObj);
-
-                if(!queryKeys.every(key => isPropertyOf(key, Transaction))) {
-                    return reject(new BadRequestError());
-                }
-
-                // we will only support single param searches (for now)
-                let key = queryKeys[0];
-                let val = queryObj[key];
-
-                // if they are searching for a transaction by id, reuse the logic we already have
-                if (key === 'id') {
-                    return resolve(await this.getTransactionById(+val));
-                }
-
-                // ensure that the provided key value is valid
-                if(!isValidStrings(val)) {
-                    return reject(new BadRequestError());
-                }
-
-                let transaction = {...await this.transactionRepo.getTransactionByUniqueKey(key, val)};
-
-                if (isEmptyObject(transaction)) {
-                    return reject(new ResourceNotFoundError());
-                }
-
-                resolve(transaction);
-
-            } catch (e) {
-                reject(e);
+            if(!queryKeys.every(key => isPropertyOf(key, Transaction))) {
+                throw new BadRequestError();
             }
 
-        });
+            // we will only support single param searches (for now)
+            let key = queryKeys[0];
+            let val = queryObj[key];
+
+            // if they are searching for a transaction by id, reuse the logic we already have
+            if (key === 'id') {
+                return await this.getTransactionById(+val);
+            }
+
+            // ensure that the provided key value is valid
+            if(!isValidStrings(val)) {
+                throw new BadRequestError();
+            }
+
+            let transaction = await this.transactionRepo.getTransactionByUniqueKey(key, val);
+
+            if (isEmptyObject(transaction)) {
+                throw new ResourceNotFoundError();
+            }
+
+            return transaction;
+
+        } catch (e) {
+            throw e;
+        }
+
     }
 
-    addNewTransaction(newTransaction: Transaction): Promise<Transaction> {
+    async addNewTransaction(newTransaction: Transaction): Promise<Transaction> {
         
-        return new Promise<Transaction>(async (resolve, reject) => {
+        try {
 
             if (!isValidObject(newTransaction, 'id')) {
-                reject(new BadRequestError('Invalid property values found in provided transaction.'));
-                return;
+                throw new BadRequestError('Invalid property values found in provided transaction.');
             }
 
             let conflict = this.getTransactionByUniqueKey({id: newTransaction.id});
         
             if (conflict) {
-                reject(new ResourcePersistenceError('The provided transaction id is already taken.'));
-                return;
+                throw new ResourcePersistenceError('The provided transaction id is already taken.');
             }
 
-            try {
-                const persistedTransaction = await this.transactionRepo.save(newTransaction);
-                resolve(persistedTransaction);
+            const persistedTransaction = await this.transactionRepo.save(newTransaction);
+            
+            return persistedTransaction;
             } catch (e) {
-                reject(e);
+                throw e;
             }
-
-        });
 
     }
 
-    updateTransaction(updatedTransaction: Transaction): Promise<boolean> {
+    async updateTransaction(updatedTransaction: Transaction): Promise<boolean> {
         
-        return new Promise<boolean>(async (resolve, reject) => {
+        try {
 
             if (!isValidObject(updatedTransaction)) {
-                reject(new BadRequestError('Invalid transaction provided (invalid values found).'));
-                return;
+                throw new BadRequestError('Invalid transaction provided (invalid values found).');
             }
 
-            try {
                 // let repo handle some of the other checking since we are still mocking db
-                resolve(await this.transactionRepo.update(updatedTransaction));
+                return await this.transactionRepo.update(updatedTransaction);
             } catch (e) {
-                reject(e);
+                throw e;
             }
-
-        });
 
     }
 
-    deleteById(id: number): Promise<boolean> {
+    async deleteById(id: number): Promise<boolean> {
         
-        return new Promise<boolean>(async (resolve, reject) => {
-            reject(new NotImplementedError());
-        });
+        try {
+            throw new NotImplementedError();
+        } catch (e) {
+            throw e;
+        }
 
     }
 

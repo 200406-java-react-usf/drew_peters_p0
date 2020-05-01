@@ -1,13 +1,18 @@
 import { User } from "../models/user";
 import { UserRepository } from "../repos/user-repo";
-import { isValidId, isValidStrings, isValidObject, isPropertyOf, isEmptyObject } from "../util/validator";
+import { isValidId,
+         isValidStrings,
+         isValidObject,
+         isPropertyOf,
+         isEmptyObject 
+       } from "../util/validator";
 import { 
-    BadRequestError, 
-    ResourceNotFoundError, 
-    NotImplementedError, 
-    ResourcePersistenceError, 
-    AuthenticationError 
-} from "../errors/errors";
+         BadRequestError, 
+         ResourceNotFoundError, 
+         NotImplementedError, 
+         ResourcePersistenceError, 
+         AuthenticationError 
+       } from "../errors/errors";
 
 
 export class UserService {
@@ -144,7 +149,7 @@ export class UserService {
             return this.removePassword(persistedUser);
 
         } catch (e) {
-            throw e
+            throw e;
         }
 
     }
