@@ -8,6 +8,8 @@ For Project 0, I will be building a RESTful API using TypeScript and Express. As
  - Accounts  { id, balance, type, ownerId }
  - Transactions  { id, amount, description, accountId }
 
+## My ERD:
+![](images/p_0%20Banking%20API%20ERD)
 
 ## Features
  - [ ] RESTful API (At least Level 2 of the Richardson Maturity Model)
