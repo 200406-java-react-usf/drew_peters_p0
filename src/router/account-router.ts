@@ -35,9 +35,9 @@ AccountRouter.get('/:id', async (req, resp) => {
     const id = +req.params.id;
     try {
         let payload = await accountService.getAccountById(id);
-        return resp.status(200).json(payload);
+        resp.status(200).json(payload);
     } catch (e) {
-        return resp.status(e.statusCode).json(e).send();
+        resp.status(e.statusCode).json(e);
     }
 });
 
@@ -47,9 +47,9 @@ AccountRouter.post('', async (req, resp) => {
     console.log(req.body);
     try {
         let newUser = await accountService.addNewAccount(req.body);
-        return resp.status(201).json(newUser).send();
+        resp.status(201).json(newUser);
     } catch (e) {
-        return resp.status(e.statusCode).json(e).send();
+        resp.status(e.statusCode).json(e);
     }
 
 });
