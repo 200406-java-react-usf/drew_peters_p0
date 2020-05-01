@@ -1,106 +1,142 @@
-import data from '../data/account-db';
 import { Account } from '../models/account';
 import { CrudRepository } from './crud-repo';
 import {
     NotImplementedError, 
-    ResourceNotFoundError
+    ResourceNotFoundError, 
+    ResourcePersistenceError,
+    InternalServerError
 } from '../errors/errors';
+import { PoolClient } from 'pg';
+import { connectionPool } from '..';
+import { mapAccountResultSet } from '../util/result-set-mapper';
 
 export class AccountRepository implements CrudRepository<Account> {
 
-    getAll(): Promise<Account[]> {
+    baseQuery = `
+        select
+            a.id,
+            a.balance,
+            a.type,
+            a.owner_id
+    `;
 
-        return new Promise<Account[]>((resolve) => {
+    async getAll(): Promise<Account[]> {
 
-            setTimeout(() => {
-                let accounts: Account[] = data;
-                resolve(accounts);
-            }, 250);
+        let client: PoolClient;
 
-        });
+        try {
+            client = await connectionPool.connect();
+            let sql = `${this.baseQuery}`;
+            let rs = await client.query(sql);
+            return rs.rows.map(mapAccountResultSet);
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
     
     }
 
-    getById(id: number): Promise<Account> {
+    async getById(id: number): Promise<Account> {
 
-        return new Promise<Account>((resolve) => {
+        let client: PoolClient;
 
-            setTimeout(() => {
-                const account = {...data.find(account => account.id === id)};
-                resolve(account);
-            }, 250);
+        try {
+            client = await connectionPool.connect();
+            let sql = `${this.baseQuery} where a.id = $1`;
+            let rs = await client.query(sql, [id]);
+            return mapAccountResultSet(rs.rows[0]);
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
 
-        });
     }
 
-    getAccountByUniqueKey(key: string, val: string): Promise<Account> {
+    async getAccountByUniqueKey(key: string, val: string): Promise<Account> {
 
-        return new Promise<Account>((resolve, reject) => {
-           
-            setTimeout(() => {
-                const account = {...data.find(account => account[key] === val)};
-                resolve(account);
-            }, 250);
+        let client: PoolClient;
 
-        });
+        try {
+            client = await connectionPool.connect();
+            let sql = `${this.baseQuery} where a.${key} = $1`;
+            let rs = await client.query(sql, [val]);
+            return mapAccountResultSet(rs.rows[0]);
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
         
+    }
+
+    async getAccountByType(type: string, oid: number) {
+        
+        let client: PoolClient;
+
+        try {
+            client = await connectionPool.connect();
+            let sql = `${this.baseQuery} where a.type = $1 and a.oid = $2`;
+            let rs = await client.query(sql, [type, oid]);
+            return mapAccountResultSet(rs.rows[0]);
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
     
     }
 
-    getAccountByType(type: string, oid: number) {
-        
-        return new Promise<Account>((resolve, reject) => {
-        
-            setTimeout(() => {
-                const account = {...data.find(account => account.type === type && account.ownerId === oid)};
-                resolve(account);  
-            }, 250);
-
-        });
-    
-    }
-
-    save(newAccount: Account): Promise<Account> {
+    async save(newAccount: Account): Promise<Account> {
             
-        return new Promise<Account>((resolve, reject) => {
-        
-            setTimeout(() => { 
-                newAccount.id = (data.length) + 1;
-                data.push(newAccount);
-                resolve(newAccount);
-            });
+        let client: PoolClient;
 
-        });
+        try {
+            client = await connectionPool.connect();
+            let sql = ``;
+            let rs = await client.query(sql, []);
+            return mapAccountResultSet(rs.rows[0]);
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
     
     }
 
-    update(updatedAccount: Account): Promise<boolean> {
+    async update(updatedAccount: Account): Promise<boolean> {
         
-        return new Promise<boolean>((resolve, reject) => {
-        
-            setTimeout(() => {
-        
-                let persistedAccount = data.find(account => account.id === updatedAccount.id);
-        
-                if (!persistedAccount) {
-                    reject(new ResourceNotFoundError('No account found with provided id.'));
-                    return;
-                }
+        let client: PoolClient;
 
-                persistedAccount = updatedAccount;
-                resolve(true);
-        
-            });
-
-        });
+        try {
+            client = await connectionPool.connect();
+            let sql = ``;
+            let rs = await client.query(sql, []);
+            return true;
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
     
     }
 
-    deleteById(id: number): Promise<boolean> {
+    async deleteById(id: number): Promise<boolean> {
 
-        return new Promise<boolean>((resolve, reject) => {
-            reject(new NotImplementedError());
-        });
+        let client: PoolClient;
+
+        try {
+            client = await connectionPool.connect();
+            let sql = ``;
+            let rs = await client.query(sql, []);
+            return true;
+        } catch (e) {
+            throw new InternalServerError();
+        } finally {
+            client && client.release();
+        }
+        
     }
 
 }
