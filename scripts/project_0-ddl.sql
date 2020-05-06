@@ -23,7 +23,7 @@ create table accounts(
 	owner_id int not null,
 	
 	constraint acounts_pk primary key (id),
-	constraint account_owner_fk foreign key (owner_id) references app_users
+	constraint account_owner_fk foreign key (owner_id) references app_users on delete cascade
 );
 create table transactions(
 	id serial,
@@ -32,7 +32,7 @@ create table transactions(
 	account_id int not null,
 	
 	constraint transactions_pk primary key (id),
-	constraint transaction_account_fk foreign key (account_id) references accounts
+	constraint transaction_account_fk foreign key (account_id) references accounts on delete cascade
 );
 
 insert into user_roles (name) 
