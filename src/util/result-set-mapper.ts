@@ -32,7 +32,7 @@ export function mapAccountResultSet(resultSet: AccountSchema): Account {
         resultSet.id,
         resultSet.balance,
         resultSet.type,
-        resultSet.ownerId
+        resultSet.owner_id
     );
 }
 
@@ -46,6 +46,6 @@ export function mapTransactionResultSet(resultSet: TransactionSchema): Transacti
         resultSet.id,
         resultSet.amount,
         resultSet.description,
-        resultSet.accountId
+        resultSet.account_id
     );
 }

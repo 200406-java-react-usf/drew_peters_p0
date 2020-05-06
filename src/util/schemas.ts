@@ -12,12 +12,12 @@ export interface AccountSchema {
     id: number,
     balance: number,
     type: string,
-    ownerId: number
+    owner_id: number
 }
 
 export interface TransactionSchema {
     id: number,
     amount: number,
     description: string,
-    accountId: number
+    account_id: number
 }
