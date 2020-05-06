@@ -2,12 +2,29 @@ import { AccountService } from '../services/account-service';
 import { AccountRepository } from '../repos/account-repo';
 import { Account } from '../models/account';
 import Validator from '../util/validator';
-import { ResourceNotFoundError, BadRequestError } from '../errors/errors';
+import { 
+    ResourceNotFoundError, 
+    BadRequestError 
+} from '../errors/errors';
+
+jest.mock('../repos/account-repo', () => {
+    
+    return new class AccountRepository {
+            getAll = jest.fn();
+            getById = jest.fn();
+            getAccountByUniqueKey = jest.fn();
+            getAccountByType = jest.fn();
+            save = jest.fn();
+            update = jest.fn();
+            delete = jest.fn();
+    }
+
+});
 
 describe('accountService', () => {
 
     let sut: AccountService;
-    let mockRepo: AccountRepository = new AccountRepository();
+    let mockRepo;
 
     let mockAccounts = [
         new Account(1, 14233, 'Savings', 1),
@@ -22,14 +39,19 @@ describe('accountService', () => {
 
     beforeEach(() => {
 
-        sut = new AccountService(mockRepo);
+        mockRepo = jest.fn(() => {
+            return {
+                getAll: jest.fn(),
+                getById: jest.fn(),
+                getAccountByUniqueKey: jest.fn(),
+                getAccountByType: jest.fn(),
+                save: jest.fn(),
+                update: jest.fn(),
+                delete: jest.fn()
+            }
+        });
 
-        // Reset all external methods
-        for (let method in AccountRepository.prototype) {
-            AccountRepository.prototype[method] = jest.fn().mockImplementation(() => {
-                throw new Error(`Failed to mock external method: AccountRepository.${method}!`);
-            });
-        }
+        sut = new AccountService(mockRepo);
     
     });
 
@@ -37,7 +59,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getAll = jest.fn().mockReturnValue(mockAccounts);
+        mockRepo.getAll = jest.fn().mockReturnValue(mockAccounts);
 
         // Act
         let result = await sut.getAllAccounts();
@@ -52,7 +74,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.assertions(1);
-        AccountRepository.prototype.getAll = jest.fn().mockReturnValue([]);
+        mockRepo.getAll = jest.fn().mockReturnValue([]);
 
         // Act
         try {
@@ -72,8 +94,8 @@ describe('accountService', () => {
         
         Validator.isValidId = jest.fn().mockReturnValue(true);
 
-        AccountRepository.prototype.getById = jest.fn().mockImplementation((id: number) => {
-            return new Promise<Account>((resolve) => resolve(mockAccounts[id - 1]));
+        mockRepo.getById = jest.fn().mockImplementation((id: number) => {
+            return new Promise<Account>((resolve) => resolve(mockAccounts[id-1]));
         });
 
 
@@ -90,7 +112,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -107,7 +129,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -124,7 +146,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -141,7 +163,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -158,7 +180,7 @@ describe('accountService', () => {
 
         // Arrange
         expect.hasAssertions();
-        AccountRepository.prototype.getById = jest.fn().mockReturnValue(true);
+        mockRepo.getById = jest.fn().mockReturnValue(true);
 
         // Act
         try {
@@ -171,4 +193,93 @@ describe('accountService', () => {
 
     });
 
+    test('should resolve to adding a new account when given the correct information to addNewAccount', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        mockRepo.save = jest.fn().mockReturnValue(mockAccounts[0]);
+
+        //Act
+        let result = await sut.addNewAccount(mockAccounts[0]);
+
+        //Asssert
+        expect(result).toBeTruthy();
+        expect(result.id).toBe(1);
+        expect(result.balance).toBeInstanceOf(Number);
+        expect(result.type).toBeInstanceOf(String);
+    });
+    
+    test('should throw BadRequestError when sending a bad value to addNewAccount', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.addNewAccount(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
+    });
+
+    test('should resolve to updating a account given the correct information', async () => {
+
+        //Arrange
+        expect.hasAssertions();
+        sut.getAccountById = jest.fn().mockReturnValue({});
+        mockRepo.update = jest.fn().mockReturnValue({})
+
+        //Act
+        let result = sut.updateAccount(new Account(1, 132, 'Checking', 1));
+
+        //Assert
+        expect(result).toBeTruthy();
+    });
+
+    test('should throw BadRequestError when sending a bad value to updateAccount', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.updateAccount(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
+    });
+
+    test('should resolve to deleting an account given the correct information to delete', async () => {
+
+        //Arrange
+        expect.hasAssertions();
+        sut.getAccountById = jest.fn().mockReturnValue({});
+        mockRepo.delete = jest.fn().mockReturnValue({})
+
+        //Act
+        let result = sut.deleteAccount(new Account(1, 132, 'Checking', 1));
+
+        //Assert
+        expect(result).toBeTruthy();
+    });
+
+    test('should throw BadRequestError when sending a bad value to deleteAccount', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.deleteAccount(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
+    });
 });

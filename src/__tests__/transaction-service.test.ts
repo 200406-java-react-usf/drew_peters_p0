@@ -2,12 +2,28 @@ import { TransactionService } from '../services/transaction-service';
 import { TransactionRepository } from '../repos/transaction-repo';
 import { Transaction } from '../models/transaction';
 import Validator from '../util/validator';
-import { ResourceNotFoundError, BadRequestError } from '../errors/errors';
+import { 
+    ResourceNotFoundError, 
+    BadRequestError 
+} from '../errors/errors';
+
+jest.mock('../repos/transaction-repo', () => {
+    
+    return new class TransactionRepository {
+            getAll = jest.fn();
+            getById = jest.fn();
+            getTransactionByUniqueKey = jest.fn();
+            save = jest.fn();
+            update = jest.fn();
+            delete = jest.fn();
+    }
+
+});
 
 describe('transactionService', () => {
 
     let sut: TransactionService;
-    let mockRepo: TransactionRepository = new TransactionRepository();
+    let mockRepo;
 
     let mockTransactions = [
         new Transaction(1, 825, 'Rent Bill', 1),
@@ -26,22 +42,26 @@ describe('transactionService', () => {
 
     beforeEach(() => {
 
+        mockRepo = jest.fn(() => {
+            return {
+                getAll: jest.fn(),
+                getById: jest.fn(),
+                getTransactionByUniqueKey: jest.fn(),
+                save: jest.fn(),
+                update: jest.fn(),
+                delete: jest.fn()
+            }
+        });
+
         sut = new TransactionService(mockRepo);
 
-        // Reset all external methods
-        for (let method in TransactionRepository.prototype) {
-            TransactionRepository.prototype[method] = jest.fn().mockImplementation(() => {
-                throw new Error(`Failed to mock external method: TransactionRepository.${method}!`);
-            });
-        }
-    
     });
 
     test('should resolve to Transaction[] when getAllTransactions() successfully retrieves transactions from the data source', async () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getAll = jest.fn().mockReturnValue(mockTransactions);
+        mockRepo.getAll = jest.fn().mockReturnValue(mockTransactions);
 
         // Act
         let result = await sut.getAllTransactions();
@@ -56,7 +76,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.assertions(1);
-        TransactionRepository.prototype.getAll = jest.fn().mockReturnValue([]);
+        mockRepo.getAll = jest.fn().mockReturnValue([]);
 
         // Act
         try {
@@ -76,8 +96,8 @@ describe('transactionService', () => {
         
         Validator.isValidId = jest.fn().mockReturnValue(true);
 
-        TransactionRepository.prototype.getById = jest.fn().mockImplementation((id: number) => {
-            return new Promise<Transaction>((resolve) => resolve(mockTransactions[id - 1]));
+        mockRepo.getById = jest.fn().mockImplementation((id: number) => {
+            return new Promise<Transaction>((resolve) => resolve(mockTransactions[id-1]));
         });
 
 
@@ -94,7 +114,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -111,7 +131,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -128,7 +148,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -145,7 +165,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getById = jest.fn().mockReturnValue(false);
+        mockRepo.getById = jest.fn().mockReturnValue(false);
 
         // Act
         try {
@@ -162,7 +182,7 @@ describe('transactionService', () => {
 
         // Arrange
         expect.hasAssertions();
-        TransactionRepository.prototype.getById = jest.fn().mockReturnValue(true);
+        mockRepo.getById = jest.fn().mockReturnValue(true);
 
         // Act
         try {
@@ -173,6 +193,95 @@ describe('transactionService', () => {
             expect(e instanceof ResourceNotFoundError).toBe(true);
         }
 
+    });
+
+    test('should resolve to adding a new transaction when given the correct information to addNewTransaction', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        mockRepo.save = jest.fn().mockReturnValue(mockTransactions[0]);
+
+        //Act
+        let result = await sut.addNewTransaction(mockTransactions[0]);
+
+        //Asssert
+        expect(result).toBeTruthy();
+        expect(result.id).toBe(1);
+        expect(result.description).toBeInstanceOf(String);
+    });
+    
+    test('should throw BadRequestError when sending a bad value to addNewTransaction', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.addNewTransaction(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
+    });
+
+    test('should resolve to updating a transaction given the correct information', async () => {
+
+        //Arrange
+        expect.hasAssertions();
+        sut.getTransactionById = jest.fn().mockReturnValue({});
+        mockRepo.update = jest.fn().mockReturnValue({})
+
+        //Act
+        let result = sut.updateTransaction(new Transaction(1, 132, 'description', 1));
+
+        //Assert
+        expect(result).toBeTruthy();
+    });
+
+    test('should throw BadRequestError when sending a bad value to updateTransaction', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.updateTransaction(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
+    });
+
+    test('should resolve to deleting a transaction given the correct information to delete', async () => {
+
+        //Arrange
+        expect.hasAssertions();
+        sut.getTransactionById = jest.fn().mockReturnValue({});
+        mockRepo.delete = jest.fn().mockReturnValue({})
+
+        //Act
+        let result = sut.deleteTransaction(new Transaction(1, 132, 'description', 1));
+
+        //Assert
+        expect(result).toBeTruthy();
+    });
+
+    test('should throw BadRequestError when sending a bad value to deleteTransaction', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        //Act
+        try {
+            await sut.deleteTransaction(null);
+        } catch (e) {
+
+            //Assert
+            expect(e instanceof BadRequestError).toBe(true);
+        }
     });
 
 });

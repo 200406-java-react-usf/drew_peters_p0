@@ -3,12 +3,6 @@ import * as mockIndex from '..';
 import * as mockMapper from '../util/result-set-mapper';
 import { Account } from '../models/account';
 
-/*
-    We need to mock the connectionPool exported from the main module
-    of our application. At this time, we only use one exposed method
-    of the pg Pool API: connect. So we will provide a mock function 
-    in its place so that we can mock it in our tests.
-*/
 jest.mock('..', () => {
     return {
         connectionPool: {
@@ -17,7 +11,6 @@ jest.mock('..', () => {
     }
 });
 
-// The result-set-mapper module also needs to be mocked
 jest.mock('../util/result-set-mapper', () => {
     return {
         mapAccountResultSet: jest.fn()
@@ -31,11 +24,6 @@ describe('accountRepo', () => {
 
     beforeEach(() => {
 
-        /*
-            We can provide a successful retrieval as the default mock implementation
-            since it is very verbose. We can provide alternative implementations for
-            the query and release methods in specific tests if needed.
-        */
         (mockConnect as jest.Mock).mockClear().mockImplementation(() => {
             return {
                 query: jest.fn().mockImplementation(() => {
@@ -113,5 +101,37 @@ describe('accountRepo', () => {
         expect(result instanceof Account).toBe(true);
 
     });
+    test('should resolve to a new Account object when save is called', async () => {
+        
+        //Arrange
+        expect.hasAssertions();
 
+        let mockAccount = new Account(1, 777, 'Checking', 1);
+        (mockMapper.mapAccountResultSet as jest.Mock).mockReturnValue(mockAccount);
+
+        //Act
+        let result = await sut.save(mockAccount);
+
+        //Assert
+        expect(result).toBeTruthy();
+        expect(result instanceof Account).toBe(true);
+        expect(mockConnect).toBeCalledTimes(1);
+    });
+
+    test('should resolve to an Account object when getAccountByUniqueKey is called', async() => {
+        
+        //Arrange
+        expect.hasAssertions();
+
+        let mockAccount = new Account(1, 222, 'Savings', 1);
+        (mockMapper.mapAccountResultSet as jest.Mock).mockReturnValue(mockAccount);
+
+        //Act
+        let result = await sut.getAccountByUniqueKey("accountId", "1");
+
+        //Assert
+        expect(result).toBeTruthy();
+        expect(result instanceof Account).toBe(true);
+        expect(mockConnect).toBeCalledTimes(1);
+    });
 });
