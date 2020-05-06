@@ -1,18 +1,18 @@
 import { User } from "../models/user";
 import { UserRepository } from "../repos/user-repo";
-import { isValidId,
-         isValidStrings,
-         isValidObject,
-         isPropertyOf,
-         isEmptyObject 
-       } from "../util/validator";
 import { 
-         BadRequestError, 
-         ResourceNotFoundError, 
-         NotImplementedError, 
-         ResourcePersistenceError, 
-         AuthenticationError 
-       } from "../errors/errors";
+    isValidId, 
+    isValidStrings, 
+    isValidObject, 
+    isPropertyOf, 
+    isEmptyObject 
+} from "../util/validator";
+import { 
+    BadRequestError, 
+    ResourceNotFoundError, 
+    ResourcePersistenceError, 
+    AuthenticationError 
+} from "../errors/errors";
 
 
 export class UserService {
@@ -23,41 +23,29 @@ export class UserService {
 
     async getAllUsers(): Promise<User[]> {
 
-        try {
+        let users = await this.userRepo.getAll();
 
-            let users = await this.userRepo.getAll();
-
-            if (users.length == 0) {
-                throw new ResourceNotFoundError();
-            }
-
-            return users.map(this.removePassword);
-
-        } catch (e) {
-            throw e;
+        if (users.length == 0) {
+            throw new ResourceNotFoundError();
         }
+
+        return users.map(this.removePassword);
 
     }
 
     async getUserById(id: number): Promise<User> {
 
-        try {
-
-            if (!isValidId(id)) {
-                throw new BadRequestError();
-            }
-
-            let user = await this.userRepo.getById(id);
-
-            if (isEmptyObject(user)) {
-                throw new ResourceNotFoundError();
-            }
-
-            return this.removePassword(user);
-
-        } catch (e) {
-            throw e;
+        if (!isValidId(id)) {
+            throw new BadRequestError();
         }
+
+        let user = await this.userRepo.getById(id);
+
+        if (isEmptyObject(user)) {
+            throw new ResourceNotFoundError();
+        }
+
+        return this.removePassword(user);
 
     }
 
@@ -132,52 +120,93 @@ export class UserService {
                 throw new BadRequestError('Invalid property values found in provided user.');
             }
 
-            let conflict = this.getUserByUniqueKey({username: newUser.username});
-        
-            if (conflict) {
+            let usernameAvailable = await this.isUsernameAvailable(newUser.username);
+
+            if (!usernameAvailable) {
                 throw new ResourcePersistenceError('The provided username is already taken.');
             }
         
-            conflict = this.getUserByUniqueKey({email: newUser.email});
+            let emailAvailable = await this.isEmailAvailable(newUser.email);
     
-            if (conflict) {
+            if (!emailAvailable) {
                 throw new  ResourcePersistenceError('The provided email is already taken.');
             }
 
+            newUser.role = 'client'; // all new registers have 'client' role by default
             const persistedUser = await this.userRepo.save(newUser);
 
             return this.removePassword(persistedUser);
 
         } catch (e) {
-            throw e;
+            throw e
         }
 
     }
 
     async updateUser(updatedUser: User): Promise<boolean> {
         
-        try {
-
-            if (!isValidObject(updatedUser)) {
-                throw new BadRequestError('Invalid user provided (invalid values found).');
-            }
-
-            // let repo handle some of the other checking since we are still mocking db
-            return await this.userRepo.update(updatedUser);
-        } catch (e) {
-            throw e;
+        if (!isValidObject(updatedUser)) {
+            throw new BadRequestError();
         }
+
+        // will throw an error if no user is found with provided id
+        let toUpdateUser = await this.getUserById(updatedUser.id);
+
+        let isAvailable = await this.isUsernameAvailable(updatedUser.username);
+
+        if(toUpdateUser.username === updatedUser.username) {
+            isAvailable = true;
+        }
+        
+        if (!isAvailable) {
+            throw new ResourcePersistenceError('This username is already taken. Please pick another.');
+        }
+
+        await this.userRepo.update(updatedUser);
+
+        return true;
+    }
+
+    async deleteUser(deletedUser: User): Promise<boolean> {
+        
+        if (!isValidObject(deletedUser)) {
+            throw new BadRequestError();
+        }
+
+        // will throw an error if no user is found with provided id
+        await this.getUserById(deletedUser.id);
+
+        await this.userRepo.delete(deletedUser);
+
+        return true;
 
     }
 
-    async deleteById(id: number): Promise<boolean> {
-        
+    private async isUsernameAvailable(username: string): Promise<boolean> {
+
         try {
-            throw new NotImplementedError();
+            await this.getUserByUniqueKey({'username': username});
         } catch (e) {
-            throw e;
+            console.log('username is available')
+            return true;
         }
 
+        console.log('username is unavailable')
+        return false;
+
+    }
+
+    private async isEmailAvailable(email: string): Promise<boolean> {
+        
+        try {
+            await this.getUserByUniqueKey({'email': email});
+        } catch (e) {
+            console.log('email is available')
+            return true;
+        }
+
+        console.log('email is unavailable')
+        return false;
     }
 
     private removePassword(user: User): User {

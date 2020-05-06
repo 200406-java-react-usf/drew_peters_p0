@@ -10,7 +10,6 @@ import {
 import { 
     BadRequestError, 
     ResourceNotFoundError, 
-    NotImplementedError, 
     ResourcePersistenceError
 } from "../errors/errors";
 
@@ -122,27 +121,30 @@ export class AccountService {
 
     async updateAccount(updatedAccount: Account): Promise<boolean> {
         
-        try {
-
-            if (!isValidObject(updatedAccount)) {
-                throw new BadRequestError('Invalid account provided (invalid values found).');
-            }
-
-                // let repo handle some of the other checking since we are still mocking db
-            return await this.accountRepo.update(updatedAccount);
-        } catch (e) {
-            throw e;
+        if (!isValidObject(updatedAccount)) {
+            throw new BadRequestError();
         }
 
+        // will throw an error if no transaction is found with provided id
+        await this.getAccountById(updatedAccount.id);
+
+        await this.accountRepo.update(updatedAccount);
+
+        return true;
     }
 
-    async deleteById(id: number): Promise<boolean> {
+    async deleteAccount(deletedAccount: Account): Promise<boolean> {
         
-        try {
-            throw new NotImplementedError();
-        } catch (e) {
-            throw e;
+        if (!isValidObject(deletedAccount)) {
+            throw new BadRequestError();
         }
+
+        // will throw an error if no user is found with provided id
+        await this.getAccountById(deletedAccount.id);
+
+        await this.accountRepo.delete(deletedAccount);
+
+        return true;
 
     }
 

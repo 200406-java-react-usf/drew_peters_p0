@@ -10,7 +10,6 @@ import {
 import { 
     BadRequestError, 
     ResourceNotFoundError, 
-    NotImplementedError, 
     ResourcePersistenceError
 } from "../errors/errors";
 
@@ -126,27 +125,30 @@ export class TransactionService {
 
     async updateTransaction(updatedTransaction: Transaction): Promise<boolean> {
         
-        try {
+        if (!isValidObject(updatedTransaction)) {
+            throw new BadRequestError();
+        }
 
-            if (!isValidObject(updatedTransaction)) {
-                throw new BadRequestError('Invalid transaction provided (invalid values found).');
-            }
+        // will throw an error if no transaction is found with provided id
+        await this.getTransactionById(updatedTransaction.id);
 
-                // let repo handle some of the other checking since we are still mocking db
-                return await this.transactionRepo.update(updatedTransaction);
-            } catch (e) {
-                throw e;
-            }
+        await this.transactionRepo.update(updatedTransaction);
 
+        return true;
     }
 
-    async deleteById(id: number): Promise<boolean> {
+    async deleteTransaction(deletedTransaction: Transaction): Promise<boolean> {
         
-        try {
-            throw new NotImplementedError();
-        } catch (e) {
-            throw e;
+        if (!isValidObject(deletedTransaction)) {
+            throw new BadRequestError();
         }
+
+        // will throw an error if no transaction is found with provided id
+        await this.getTransactionById(deletedTransaction.id);
+
+        await this.transactionRepo.delete(deletedTransaction);
+
+        return true;
 
     }
 
