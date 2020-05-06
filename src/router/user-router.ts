@@ -51,3 +51,24 @@ UserRouter.post('', async (req, resp) => {
     }
 
 });
+
+UserRouter.put('', async (req,resp) => {
+    
+    console.log('PUT REQUEST RECEIVED AT /users');
+    console.log(req.body);
+    try {
+        let updatedUser = await userService.updateUser(req.body);
+        return resp.status(202).json(updatedUser);
+    } catch (e) {
+        return resp.status(e.statusCode).json(e);
+    }
+});
+
+UserRouter.delete('', adminGuard, async (req,resp) => {
+    try {
+        let deletedUser = await userService.deleteUser(req.body);
+        return resp.status(202).json(deletedUser);
+    } catch (e) {
+        return resp.status(e.statusCode || 500).json(e);
+    }
+});

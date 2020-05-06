@@ -43,13 +43,34 @@ AccountRouter.get('/:id', async (req, resp) => {
 
 AccountRouter.post('', async (req, resp) => {
 
-    console.log('POST REQUEST RECEIVED AT /users');
+    console.log('POST REQUEST RECEIVED AT /accounts');
     console.log(req.body);
     try {
-        let newUser = await accountService.addNewAccount(req.body);
-        resp.status(201).json(newUser);
+        let newAccount = await accountService.addNewAccount(req.body);
+        resp.status(201).json(newAccount);
     } catch (e) {
         resp.status(e.statusCode).json(e);
     }
 
+});
+
+AccountRouter.put('', async (req,resp) => {
+    
+    console.log('PUT REQUEST RECEIVED AT /accounts');
+    console.log(req.body);
+    try {
+        let updatedAccount = await accountService.updateAccount(req.body);
+        return resp.status(202).json(updatedAccount);
+    } catch (e) {
+        return resp.status(e.statusCode).json(e);
+    }
+});
+
+AccountRouter.delete('', adminGuard, async (req,resp) => {
+    try {
+        let deletedAccount = await accountService.deleteAccount(req.body);
+        return resp.status(202).json(deletedAccount);
+    } catch (e) {
+        return resp.status(e.statusCode || 500).json(e);
+    }
 });
