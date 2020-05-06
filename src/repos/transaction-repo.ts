@@ -1,11 +1,6 @@
 import { Transaction } from '../models/transaction';
 import { CrudRepository } from './crud-repo';
-import {
-    NotImplementedError, 
-    ResourceNotFoundError, 
-    ResourcePersistenceError,
-    InternalServerError
-} from '../errors/errors';
+import { InternalServerError } from '../errors/errors';
 import { PoolClient } from 'pg';
 import { connectionPool } from '..';
 import { mapTransactionResultSet } from '../util/result-set-mapper';
@@ -17,7 +12,10 @@ export class TransactionRepository implements CrudRepository<Transaction> {
             t.id,
             t.amount,
             t.description,
-            t.iad
+            t.account_id
+        from transactions t
+        join accounts a
+        on t.account_id = a.id
     `;
 
     async getAll(): Promise<Transaction[]> {
@@ -26,7 +24,7 @@ export class TransactionRepository implements CrudRepository<Transaction> {
 
         try {
             client = await connectionPool.connect();
-            let sql = `${this.baseQuery}`;
+            let sql = `${this.baseQuery} order by t.id`;
             let rs = await client.query(sql);
             return rs.rows.map(mapTransactionResultSet);
         } catch (e) {
@@ -77,10 +75,21 @@ export class TransactionRepository implements CrudRepository<Transaction> {
 
         try {
             client = await connectionPool.connect();
-            let sql = ``;
-            let rs = await client.query(sql, []);
-            return mapTransactionResultSet(rs.rows[0]);
+
+            let accountId = (await client.query('select id from accounts where name = $1', [newTransaction.accountId])).rows[0].id;
+
+            let sql = `
+                insert into transactions (amount, description, account_id)
+                values ($1, $2, $3) returning id
+            `;
+            let rs = await client.query(sql, [newTransaction.amount, newTransaction.description, accountId]);
+
+            newTransaction.id = rs.rows[0].id;
+            
+            return newTransaction;
+
         } catch (e) {
+            console.log(e);
             throw new InternalServerError();
         } finally {
             client && client.release();
@@ -94,8 +103,14 @@ export class TransactionRepository implements CrudRepository<Transaction> {
 
         try {
             client = await connectionPool.connect();
-            let sql = ``;
-            let rs = await client.query(sql, []);
+            let sql = `
+            update transactions
+            set
+                amount = $2,
+                description = $3
+            where id = $1
+        `;
+        await client.query(sql, [updatedTransaction.id, updatedTransaction.amount, updatedTransaction.description]);
             return true;
         } catch (e) {
             throw new InternalServerError();
@@ -105,21 +120,21 @@ export class TransactionRepository implements CrudRepository<Transaction> {
     
     }
 
-    async deleteById(id: number): Promise<boolean> {
-
+    async delete(deletedTransaction: Transaction): Promise<boolean> {
         let client: PoolClient;
-
-        try {
-            client = await connectionPool.connect();
-            let sql = ``;
-            let rs = await client.query(sql, []);
-            return true;
-        } catch (e) {
-            throw new InternalServerError();
-        } finally {
-            client && client.release();
-        }
-        
+            try { 
+                client = await connectionPool.connect();
+                let sql = `
+                    delete from transactions
+                    where id = $1
+                `;
+                await client.query(sql, [deletedTransaction.id]);
+                return true;
+            } catch (e) {
+                console.log(e);
+                throw new InternalServerError();
+            } finally {
+                client && client.release();
+            }
     }
-
 }
