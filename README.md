@@ -1,6 +1,6 @@
 # Project 0
 
-WIP:"For Project 0, I will be building a RESTful API using TypeScript and Express. Associates are allowed to come up with their own API idea, but it must be approved by the trainer." -Need to add more description for my project. Roughly a paragraph explaining high level overview.
+For my Project 0, I will be building a functional banking API that persists 3 sets of data. Those data sets are comprised of users, accounts, and transactions. Below is an ERD of my API explaining the relationship between the entities. My API complies with all the below features, minus %10 points shy of unit testing. It has logging functionality, and requires authentication, and authorization for some functionality. I will be demonstrating my API consumption with Postman.
 
 
 ## My idea: Banking API that persists 3 data sets.
