@@ -1,22 +1,9 @@
-create user project_0_api
-with password 'password';
-
-create database project_0;
-
-grant all privileges 
-on database project_0
-to project_0_api;
-
-set search_path to project_0;
-
 create table user_roles(
 	id serial,
 	name varchar(25) not null,
 	
 	constraint user_roles_pk primary key (id)
-	
 );
-
 create table app_users(
 	id serial,
 	username varchar(25) unique not null,
@@ -45,7 +32,7 @@ create table transactions(
 	account_id int not null,
 	
 	constraint transactions_pk primary key (id),
-	constraint transaction_account_fk foreign key (account_id) references app_users
+	constraint transaction_account_fk foreign key (account_id) references accounts
 );
 
 insert into user_roles (name) 
@@ -69,8 +56,8 @@ values
 	(526, 'Checking', 3),
 	(341, 'Checking', 5),
 	(57461, 'Savings', 2);
-
-insert into transactions (amount, description, account_id) 
+	
+insert into transactions (amount, description, account_id)
 values 
 	(825, 'Rent Bill', 1),
 	(216.12, 'Electric Bill', 1),
@@ -86,3 +73,8 @@ values
 	(84.25, 'Debit Transaction', 5);
 
 commit;
+
+drop table user_roles; 
+drop table app_users; 
+drop table accounts; 
+drop table transactions; 

@@ -24,7 +24,7 @@ export const connectionPool: Pool = new Pool({
     password: process.env['DB_PASSWORD'],
     max: 5
 });
-
+//morgan logging
 fs.mkdir(`${__dirname}/logs`, () => {});
 const logStream = fs.createWriteStream(path.join(__dirname, 'logs/access.log'), { flags: 'a' });
 
