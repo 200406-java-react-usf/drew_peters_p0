@@ -29,7 +29,7 @@ TransactionRouter.get('', adminGuard, async (req, resp) => {
 
 });
 
-TransactionRouter.get('/:id', async (req, resp) => {
+TransactionRouter.get('/:id', adminGuard, async (req, resp) => {
     const id = +req.params.id;
     try {
         let payload = await transactionService.getTransactionById(id);

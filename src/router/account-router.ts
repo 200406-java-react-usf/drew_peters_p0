@@ -31,7 +31,7 @@ AccountRouter.get('', adminGuard, async (req, resp) => {
 
 });
 
-AccountRouter.get('/:id', async (req, resp) => {
+AccountRouter.get('/:id', adminGuard, async (req, resp) => {
     const id = +req.params.id;
     try {
         let payload = await accountService.getAccountById(id);

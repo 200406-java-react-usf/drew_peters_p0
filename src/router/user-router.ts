@@ -29,7 +29,7 @@ UserRouter.get('', adminGuard, async (req, resp) => {
 
 });
 
-UserRouter.get('/:id', async (req, resp) => {
+UserRouter.get('/:id', adminGuard, async (req, resp) => {
     const id = +req.params.id;
     try {
         let payload = await userService.getUserById(id);
